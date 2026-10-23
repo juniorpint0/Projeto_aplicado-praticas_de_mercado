@@ -3,6 +3,7 @@
 
 **Autor:** José Gedson Pinto Júnior ([@juniorpint0](https://github.com/juniorpint0))  
 **Repositório:** [juniorpint0/Projeto_aplicado-praticas_de_mercado](https://github.com/juniorpint0/Projeto_aplicado-praticas_de_mercado)  
+**Aplicação em Produção:** [https://163.176.136.251.sslip.io](https://163.176.136.251.sslip.io) *(IP Público: `163.176.136.251`)*  
 **Ambiente de Desenvolvimento:** Google Antigravity IDE (Codificação Assistida por IA)
 
 ![Status](https://img.shields.io/badge/Status-Homologado-success)
