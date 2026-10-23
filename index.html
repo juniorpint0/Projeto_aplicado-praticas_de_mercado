@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Políticas de Segurança do Navegador (Mitigação A03:2025 - Injection / XSS) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Portal Seguro | Projeto Aplicado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ==================== TELA DE LOGIN ==================== -->
+  <main id="login-view" class="view-container">
+    <div class="login-card">
+      <div class="brand-header">
+        <div class="shield-icon">🛡️</div>
+        <h1>Portal Corporativo Seguro</h1>
+        <p class="subtitle">Projeto Aplicado: Práticas de Mercado • <em>Secure by Design</em></p>
+      </div>
+
+      <div id="login-alert" class="alert hidden" role="alert" aria-live="polite"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="username">Usuário Corporativo</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" name="username" autocomplete="username" required placeholder="Digite seu usuário" maxlength="32">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha de Acesso</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••••••" maxlength="64">
+          </div>
+        </div>
+
+        <div class="rate-limit-info" id="rate-limit-indicator">
+          Tentativas permitidas: <span id="attempts-left">4</span> de 4
+        </div>
+
+        <button type="submit" id="btn-login" class="btn btn-primary">
+          <span class="btn-text">Entrar no Sistema</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </form>
+
+      <div class="credentials-helper">
+        <p class="helper-title">🔑 Credenciais de Teste Homologadas:</p>
+        <div class="credentials-box">
+          <code>Usuário: <strong>admin</strong></code>
+          <code>Senha: <strong>Admin@Secure2026!</strong></code>
+        </div>
+        <p class="helper-note">* As senhas são validadas com salt + SHA-256 via Web Crypto API (sem texto plano).*</p>
+      </div>
+
+      <footer class="login-footer">
+        <span>Conformidade OWASP Top 10:2025 • Post-Quantum Ready</span>
+        <div style="margin-top: 4px; font-weight: 500; color: #9ca3af;">Autor: José Gedson Pinto Júnior (@juniorpint0)</div>
+      </footer>
+    </div>
+  </main>
+
+  <!-- ==================== PÁGINA INTERNA PROTEGIDA (DASHBOARD) ==================== -->
+  <div id="app-view" class="view-container hidden">
+    <!-- Barra de Navegação Superior -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="topbar-logo">🛡️</span>
+        <span class="topbar-title">SecCorp Console</span>
+        <span class="badge badge-success">Autenticado</span>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="session-timer" title="Tempo restante da sessão por inatividade">
+          ⏱️ Expiração da Sessão: <strong id="session-countdown">15:00</strong>
+        </div>
+        <div class="user-profile">
+          <span class="avatar">👤</span>
+          <span id="authenticated-user" class="username">Usuário</span>
+        </div>
+        <!-- Botão de Logout Funcional Obrigatório -->
+        <button id="btn-logout" class="btn btn-outline-danger" title="Encerrar sessão com segurança">
+          🚪 Sair
+        </button>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal do Dashboard -->
+    <main class="dashboard-content">
+      <section class="welcome-banner">
+        <div>
+          <h2>Área Restrita do Sistema</h2>
+          <p>Ambiente protegido com controle de acesso rigoroso, integridade de sessão e defesas ativas contra ameaças cibernéticas.</p>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>Sessão Criptograficamente Válida</span>
+        </div>
+      </section>
+
+      <!-- Grade de Métricas e Segurança -->
+      <section class="metrics-grid">
+        <article class="metric-card">
+          <div class="metric-header">
+            <h3>Controle de Acesso</h3>
+            <span class="metric-icon">🔐</span>
+          </div>
+          <div class="metric-value">A01:2025</div>
+          <p class="metric-desc">Tokens de sessão com entropia de 256 bits gerados via <code>crypto.getRandomValues</code> com validação contínua de estado.</p>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-header">
+            <h3>Prevenção de Injeção</h3>
+            <span class="metric-icon">🛡️</span>
+          </div>
+          <div class="metric-value">A03:2025</div>
+          <p class="metric-desc">Sanitização e escape contextual estrito no DOM, associado a cabeçalhos rígidos de Content Security Policy (CSP).</p>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-header">
+            <h3>Identificação & Autenticação</h3>
+            <span class="metric-icon">⚡</span>
+          </div>
+          <div class="metric-value">A07:2025</div>
+          <p class="metric-desc">Rate Limiting com tolerância de 4 erros, timeout automático por inatividade e hash criptográfico de credenciais.</p>
+        </article>
+      </section>
+
+      <!-- Painel Interativo de Teste de Sanitização (Auditoria ao Vivo) -->
+      <section class="card test-panel">
+        <div class="card-header">
+          <h3>🧪 Laboratório de Auditoria: Validação Ativa contra XSS (OWASP A03:2025)</h3>
+        </div>
+        <div class="card-body">
+          <p>Digite qualquer payload malicioso abaixo (ex: <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> ou <code>&lt;img src=x onerror=alert('xss')&gt;</code>) para testar o motor de higienização do sistema:</p>
+          <div class="test-input-group">
+            <input type="text" id="test-xss-input" placeholder="Cole seu payload de teste aqui..." maxlength="120">
+            <button id="btn-test-xss" class="btn btn-secondary">Testar Sanitização</button>
+          </div>
+          <div class="test-results">
+            <div class="result-box">
+              <span class="result-label">Entrada Original Escapada:</span>
+              <pre id="raw-output">-</pre>
+            </div>
+            <div class="result-box">
+              <span class="result-label">Renderização Segura no DOM (Sem Execução):</span>
+              <div id="sanitized-output" class="safe-render-area">-</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabela de Sessão e Auditoria Técnica -->
+      <section class="card audit-card">
+        <div class="card-header">
+          <h3>📜 Metadados Técnicos da Sessão Atual</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Parâmetro</th>
+                  <th>Valor Homologado</th>
+                  <th>Critério de Segurança</th>
+                </tr>
+              </thead>
+              <tbody id="session-metadata-body">
+                <!-- Preenchido dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Projeto Aplicado: Práticas de Mercado • Autor: <strong>José Gedson Pinto Júnior (@juniorpint0)</strong> • CI/CD via GitHub Actions</p>
+    </footer>
+  </div>
+
+  <script src="js/security.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

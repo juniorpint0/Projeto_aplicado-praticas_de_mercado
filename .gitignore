@@ -1,0 +1,55 @@
+# ==============================================================================
+# .gitignore - Prevenção de Vazamento de Credenciais e Arquivos Sensíveis
+# Disciplina: Projeto Aplicado - Práticas de Mercado (Segurança da Informação)
+# ==============================================================================
+
+# Chaves Criptográficas e Certificados Privados (CRÍTICO)
+*.pem
+*.key
+*.pkcs12
+*.pfx
+*.p12
+*.crt
+*.csr
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.ppk
+known_hosts
+
+# Variáveis de Ambiente e Credenciais Locais
+.env
+.env.*
+!.env.example
+*.secrets
+secrets/
+credentials.json
+auth.json
+
+# Arquivos de Nuvem e Provedores (AWS, GCP, Azure, Oracle)
+.aws/
+.azure/
+.gcloud/
+oci_api_key.pem
+
+# Logs e Dados Temporários
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.pid
+*.seed
+
+# Arquivos e Diretórios de Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ambientes de IDE e Editores Locais
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
