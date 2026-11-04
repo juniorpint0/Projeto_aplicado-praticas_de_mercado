@@ -15,8 +15,9 @@ const Security = (() => {
   // Configurações Globais de Segurança
   const SESSION_TIMEOUT_SECONDS = 15 * 60; // 15 minutos de inatividade
   let sessionTimerInterval = null;
-  let remainingSeconds = SESSION_TIMEOUT_SECONDS;
+  let sessionDeadline = 0;
   let onSessionExpireCallback = null;
+  let onSessionTickCallback = null;
 
   /**
    * OWASP A03:2025 - Prevenção contra XSS / Injection
@@ -57,34 +58,64 @@ const Security = (() => {
   }
 
   /**
+   * Verifica o relógio real (imune a congelamento de abas em segundo plano do navegador)
+   */
+  function checkAndUpdateTimer() {
+    if (!sessionTimerInterval) return false;
+
+    const now = Date.now();
+    const remainingSeconds = Math.max(0, Math.ceil((sessionDeadline - now) / 1000));
+
+    if (typeof onSessionTickCallback === 'function') {
+      const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+      const secs = String(remainingSeconds % 60).padStart(2, '0');
+      onSessionTickCallback(`${mins}:${secs}`);
+    }
+
+    if (remainingSeconds <= 0) {
+      const expireCb = onSessionExpireCallback;
+      stopSessionTimer();
+      if (typeof expireCb === 'function') {
+        expireCb();
+      }
+      return true; // Expirou
+    }
+    return false;
+  }
+
+  /**
    * OWASP A01:2025 - Broken Access Control: Monitor de Inatividade
-   * Inicia a contagem regressiva para expiração automática da sessão
+   * Inicia a contagem regressiva para expiração automática da sessão usando timestamp real
    */
   function startSessionTimer(onExpire, onTick) {
     stopSessionTimer();
-    remainingSeconds = SESSION_TIMEOUT_SECONDS;
+    sessionDeadline = Date.now() + SESSION_TIMEOUT_SECONDS * 1000;
     onSessionExpireCallback = onExpire;
+    onSessionTickCallback = onTick;
 
-    sessionTimerInterval = setInterval(() => {
-      remainingSeconds--;
-
-      if (typeof onTick === 'function') {
-        const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
-        const secs = String(remainingSeconds % 60).padStart(2, '0');
-        onTick(`${mins}:${secs}`);
-      }
-
-      if (remainingSeconds <= 0) {
-        stopSessionTimer();
-        if (typeof onSessionExpireCallback === 'function') {
-          onSessionExpireCallback();
-        }
-      }
-    }, 1000);
+    checkAndUpdateTimer();
+    sessionTimerInterval = setInterval(checkAndUpdateTimer, 1000);
   }
 
   function resetSessionTimer() {
-    remainingSeconds = SESSION_TIMEOUT_SECONDS;
+    if (!sessionTimerInterval) return;
+    // Se já expirou enquanto a aba estava em segundo plano, desloga imediatamente em vez de renovar
+    if (Date.now() >= sessionDeadline) {
+      checkAndUpdateTimer();
+      return;
+    }
+    sessionDeadline = Date.now() + SESSION_TIMEOUT_SECONDS * 1000;
+    try {
+      const raw = sessionStorage.getItem('__sec_session_token');
+      if (raw) {
+        const data = JSON.parse(raw);
+        data.expiresAt = new Date(sessionDeadline).toISOString();
+        sessionStorage.setItem('__sec_session_token', JSON.stringify(data));
+      }
+    } catch {
+      // ignora erro de parse
+    }
+    checkAndUpdateTimer();
   }
 
   function stopSessionTimer() {
@@ -92,19 +123,27 @@ const Security = (() => {
       clearInterval(sessionTimerInterval);
       sessionTimerInterval = null;
     }
+    sessionDeadline = 0;
   }
 
   /**
-   * Registra ouvintes para reiniciar o cronômetro de inatividade mediante interação do usuário
+   * Registra ouvintes para verificar expiração ao voltar para a aba e renovar mediante atividade válida
    */
   function initUserActivityListeners() {
     ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
       window.addEventListener(event, () => {
-        // Renova tempo se a sessão estiver ativa
         if (sessionTimerInterval) {
           resetSessionTimer();
         }
       }, { passive: true });
+    });
+
+    // Quando o usuário volta para a aba ou foca a janela, verifica imediatamente se o tempo já esgotou
+    window.addEventListener('focus', () => {
+      if (sessionTimerInterval) checkAndUpdateTimer();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && sessionTimerInterval) checkAndUpdateTimer();
     });
   }
 
