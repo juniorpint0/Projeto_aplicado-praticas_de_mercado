@@ -3,6 +3,7 @@ name: "CI/CD Pipeline - Deploy para Servidor Cloud"
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   audit-and-deploy:
@@ -19,27 +20,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
-      - name: "Deploy Seguro via SSH (SCP para /var/www/html)"
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: "index.html,css/,js/"
-          target: "/tmp/deploy_staging"
-
-      - name: "Aplicacao de Permissoes e Atualizacao do Web Server"
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            sudo cp -r /tmp/deploy_staging/* /var/www/html/
-            sudo chown -R www-data:www-data /var/www/html/
-            sudo chmod -R 755 /var/www/html/
-            rm -rf /tmp/deploy_staging
-            sudo systemctl reload nginx || sudo systemctl reload apache2
-            echo "Deploy concluido com sucesso e permissoes aplicadas!"
+      - name: "Deploy Seguro via SSH e Atualizacao do Web Server"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p 22 -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "mkdir -p /tmp/deploy_staging"
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -r index.html css js "$SSH_USER@$SSH_HOST:/tmp/deploy_staging/"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "sudo cp -r /tmp/deploy_staging/* /var/www/html/ && sudo chown -R www-data:www-data /var/www/html/ && sudo chmod -R 755 /var/www/html/ && rm -rf /tmp/deploy_staging && sudo systemctl reload nginx"
+          rm -f ~/.ssh/id_rsa
+          echo "Deploy concluido com sucesso e permissoes aplicadas!"
