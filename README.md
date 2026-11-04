@@ -135,15 +135,17 @@ server {
 }
 ```
 
-### 4. Certificado SSL/TLS com Suporte a PQC (Post-Quantum Cryptography)
-Instale o Certbot e gere o certificado:
+### 4. Certificado SSL/TLS para IP Público (Certbot 5.8+) & Suporte a PQC (`X25519MLKEM768`)
+Instale o Certbot via Snap (versão 5.8+), atualize o OpenSSL para a versão 3.5+ (suporte nativo a ML-KEM / `X25519MLKEM768`) e emita o certificado diretamente para o IP público:
 ```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+sudo certbot certonly --webroot -w /var/www/html --ip-address 163.176.136.251 --preferred-profile shortlived --agree-tos --non-interactive
 ```
 Submeta seu IP ou Domínio aos validadores exigidos no edital:
-* **SSL.org:** [https://www.ssl.org/](https://www.ssl.org/) (Certificate Trusted: YES)
-* **DigiCert PQC Checker:** [https://www.digicert.com/pqc-checker](https://www.digicert.com/pqc-checker) (PQC Key Exchange ativado)
+* **SSL.org:** [https://www.ssl.org/](https://www.ssl.org/) (`Certificate Trusted: YES` e `Good signature · Good key`)
+* **DigiCert PQC Checker:** [https://www.digicert.com/pqc-checker](https://www.digicert.com/pqc-checker) (TLS 1.3 e PQC `X25519MLKEM768` ativados)
+* **Qualys SSL Labs:** [https://www.ssllabs.com/ssltest/](https://www.ssllabs.com/ssltest/) (**Nota A** e suporte a PQC Key Exchange)
 
 ---
 
